@@ -1,7 +1,8 @@
 package com.example.guilhermecortes.contactmanager;
-
+import android.content.Context;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -18,11 +19,16 @@ import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.app.AlertDialog;
 import java.util.ArrayList;
 import java.util.List;
-
-
+import android.content.SharedPreferences;
+import android.text.method.LinkMovementMethod;
+import android.text.Spanned;
+import android.text.SpannableString;
+import android.text.style.URLSpan;
+import android.text.style.StyleSpan;
+import  android.graphics.Typeface;
 public class MainActivity extends Activity {
 
     private EditText nameTxt, phoneTxt, emailTxt, addressTxt;
@@ -30,12 +36,19 @@ public class MainActivity extends Activity {
     List<Contact> Contacts = new ArrayList<Contact>();
     ListView contactListView;
     Uri imageURI = null;
-
+    public String[] choices = {
+            "Phone Number",
+            "Email",
+            "Address",
+    };
+    final ArrayList<Integer>  userchoices  = new ArrayList();
+    SharedPreferences sharedpreferences;
+    int privacy = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        SharedPreferences sharedpreferences = sharedpreferences = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
         nameTxt = (EditText) findViewById(R.id.txtName);
         phoneTxt = (EditText) findViewById(R.id.txtPhone);
         emailTxt = (EditText) findViewById(R.id.txtEmail);
@@ -119,7 +132,7 @@ public class MainActivity extends Activity {
 
     private class ContactListAdapter extends ArrayAdapter<Contact>{
         public ContactListAdapter(){
-            super (MainActivity.this, R.layout.listview_item, Contacts);
+            super(MainActivity.this, R.layout.listview_item, Contacts);
         }
 
         //criar função para retornar o emelento do array
@@ -137,10 +150,19 @@ public class MainActivity extends Activity {
             TextView email = (TextView) view.findViewById(R.id.emailAddress);
             email.setText(currentContact.get_email());
             TextView address = (TextView) view.findViewById(R.id.cAddress);
-            address.setText(currentContact.get_address());
+            sharedpreferences = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+            if(sharedpreferences.contains("Choice 3")) {
+                SpannableString ss = new SpannableString(currentContact.get_address());
+                ss.setSpan(new StyleSpan(Typeface.ITALIC), 0, ss.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                ss.setSpan(new URLSpan("http://google.com"), 0, ss.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                address.setText(ss);
+                address.setMovementMethod(LinkMovementMethod.getInstance());
+            } else{
+                address.setText(currentContact.get_address());
+            }
+
             ImageView ivContactImage = (ImageView) view.findViewById(R.id.ivContactImage);
             ivContactImage.setImageURI(currentContact.get_imageURI());
-
             return view;
         }
     }
@@ -159,9 +181,58 @@ public class MainActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
+        final List<Integer>  userchoices  = new ArrayList();
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Privacy Settings");
+            builder.setMultiChoiceItems(choices, null, new DialogInterface.OnMultiChoiceClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                            if (isChecked) {
+                                userchoices.add(which);
+                            } else if (userchoices.contains(which)) {
+                                userchoices.remove(Integer.valueOf(which));
+                            }
+                        }
+                    }
+            );
+            builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    // User clicked OK, so save the mSelectedItems results somewhere
+                    // or return them to the component that opened the dialog
+                    sharedpreferences = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                    editor.clear();
+                    editor.commit();
+                    for(int i = 0; i < userchoices.size(); i++) {
+                        if ((userchoices.get(i)).equals(0)  && i == 0) {
+                            editor.putInt("Choice 1", userchoices.get(i) + 1);
+                        } else if (userchoices.get(i).equals(1) && i == 0) {
+                            editor.putInt("Choice 2", userchoices.get(i));
+                        } else if (userchoices.get(i).equals(2) && i == 0) {
+                            editor.putInt("Choice 3", userchoices.get(i) - 1);
+                        } else if (userchoices.get(i).equals(1) && i == 1) {
+                            editor.putInt("Choice 2", userchoices.get(i));
+                        } else if (userchoices.get(i).equals(2) && i == 1) {
+                            editor.putInt("Choice 3", userchoices.get(i) - 1);
+                        } else if (userchoices.get(i).equals(2) && i == 2) {
+                            editor.putInt("Choice 3", userchoices.get(i) - 1);
+                        }
+                    }
+                    editor.commit();
+                    populateList();
+                }
+            })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int id) {
+                        }
+                    });
+
+            builder.show();
+
             return true;
         }
 
