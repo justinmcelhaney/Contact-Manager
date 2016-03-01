@@ -43,7 +43,6 @@ public class MainActivity extends Activity {
     };
     final ArrayList<Integer>  userchoices  = new ArrayList();
     SharedPreferences sharedpreferences;
-    int privacy = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +54,8 @@ public class MainActivity extends Activity {
         addressTxt = (EditText) findViewById(R.id.txtAddress);
         contactListView = (ListView) findViewById(R.id.listView);
         contactImageImgView = (ImageView) findViewById(R.id.imgViewContactImage);
-
+        TextView textView = (TextView) findViewById(R.id.txtAddress);
+        textView.setText(getIntent().getStringExtra("address"));
         TabHost tabHost = (TabHost) findViewById(R.id.tabHost);
 
         tabHost.setup();
@@ -209,15 +209,20 @@ public class MainActivity extends Activity {
                     for(int i = 0; i < userchoices.size(); i++) {
                         if ((userchoices.get(i)).equals(0)  && i == 0) {
                             editor.putInt("Choice 1", userchoices.get(i) + 1);
-                        } else if (userchoices.get(i).equals(1) && i == 0) {
+                        }
+                        if (userchoices.get(i).equals(1) && i == 0) {
                             editor.putInt("Choice 2", userchoices.get(i));
-                        } else if (userchoices.get(i).equals(2) && i == 0) {
+                        }
+                        if (userchoices.get(i).equals(2) && i == 0) {
                             editor.putInt("Choice 3", userchoices.get(i) - 1);
-                        } else if (userchoices.get(i).equals(1) && i == 1) {
+                        }
+                        if (userchoices.get(i).equals(1) && i == 1) {
                             editor.putInt("Choice 2", userchoices.get(i));
-                        } else if (userchoices.get(i).equals(2) && i == 1) {
+                        }
+                        if (userchoices.get(i).equals(2) && i == 1) {
                             editor.putInt("Choice 3", userchoices.get(i) - 1);
-                        } else if (userchoices.get(i).equals(2) && i == 2) {
+                        }
+                        if (userchoices.get(i).equals(2) && i == 2) {
                             editor.putInt("Choice 3", userchoices.get(i) - 1);
                         }
                     }
@@ -232,7 +237,6 @@ public class MainActivity extends Activity {
                     });
 
             builder.show();
-
             return true;
         }
 
